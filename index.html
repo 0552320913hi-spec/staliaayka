@@ -1,0 +1,767 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>جدول التشيك</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Reem+Kufi:wght@600&display=swap">
+<style>
+/* التخطيط: شريط علوي، شاشة البداية (نموذج الأبعاد + المشاريع)، ثم المحرر: أدوات فوق ورقة جدول بترويسة ثابتة */
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --ink:#17202E; --muted:#5B6678; --line:#D5DBE5; --grid:#C9D1DE;
+  --head:#E3E8F1; --accent:#2446D6; --accent-ink:#FFFFFF; --selbg:rgba(36,70,214,.13); --tick:#2446D6;
+  --danger:#C23B3B; --shadow:0 8px 28px rgba(20,30,50,.16);
+  --f-body:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif; --f-display:'Reem Kufi','IBM Plex Sans Arabic',Tahoma,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10141C; --surface:#181E29; --ink:#E8ECF4; --muted:#9AA5B8; --line:#2A3344; --grid:#2F394B;
+  --head:#212A3A; --accent:#7D95FF; --accent-ink:#0B1020; --selbg:rgba(125,149,255,.2); --tick:#8FA6FF;
+  --danger:#FF7B7B; --shadow:0 8px 28px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10141C; --surface:#181E29; --ink:#E8ECF4; --muted:#9AA5B8; --line:#2A3344; --grid:#2F394B;
+  --head:#212A3A; --accent:#7D95FF; --accent-ink:#0B1020; --selbg:rgba(125,149,255,.2); --tick:#8FA6FF;
+  --danger:#FF7B7B; --shadow:0 8px 28px rgba(0,0,0,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-inline:16px;padding-block:14px 28px;direction:rtl;margin:0}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-size:26px;line-height:1}
+.brand svg{width:30px;height:30px;flex:none}
+.projbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;flex:1;min-width:0}
+.projbar #projName{flex:1 1 180px;min-width:0;max-width:340px;font-weight:600;background:transparent;border:1px solid transparent;
+  border-bottom-color:var(--line);padding:6px 8px;border-radius:6px 6px 0 0}
+.projbar #projName:hover{border-color:var(--line)}
+.state{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.btn{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:6px 12px;min-height:36px;transition:background .12s,border-color .12s}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--danger)}
+.btn.danger.armed{background:var(--danger);color:var(--surface);border-color:var(--danger)}
+.btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* شاشة البداية */
+.home{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:760px){.home{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.panel h2{margin:0 0 14px;font-size:18px;font-weight:600;text-wrap:balance}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.field label,.lbl-s{font-size:13px;color:var(--muted)}
+.field input{background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px;min-height:40px;width:100%}
+.dims{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dims .field{margin-bottom:0}
+.hintline{font-size:13px;color:var(--muted);margin:10px 0 14px}
+.err{color:var(--danger);font-size:13px;min-height:20px;margin:6px 0 0}
+.row-actions{display:flex;flex-wrap:wrap;gap:8px}
+.plist{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.pitem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:12px 14px;background:var(--bg)}
+.pitem h3{margin:0;font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.pmeta{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{grid-column:1/-1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.empty{color:var(--muted);padding:22px 4px;text-align:center}
+details.backup{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+details.backup summary{cursor:pointer;color:var(--muted);font-size:14px}
+details.backup textarea{width:100%;min-height:80px;margin-top:10px;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px;direction:ltr;font-size:12px}
+
+/* أدوات المحرر */
+.tools{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.trow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.group{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.sep{width:1px;height:26px;background:var(--line)}
+@media (max-width:640px){.sep{display:none}}
+.glabel{font-size:13px;color:var(--muted)}
+.sw{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.swb{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--grid);padding:0}
+.swb[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+.swb.none{background:linear-gradient(135deg,transparent 45%,var(--danger) 46%,var(--danger) 54%,transparent 55%),var(--surface)}
+input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.num{width:64px;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:5px 8px;min-height:36px;text-align:center}
+.chk{display:flex;align-items:center;gap:7px;font-size:14px;cursor:pointer}
+.chk input{width:17px;height:17px;accent-color:var(--accent)}
+.hint{font-size:13px;color:var(--muted);margin:0}
+#selbar{border-top:1px dashed var(--line);padding-top:10px}
+#selInfo{font-weight:600;font-size:14px}
+
+/* ورقة الجدول */
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:auto;max-height:calc(100dvh - 260px);min-height:260px;position:relative}
+.tblwrap{position:relative;display:inline-block;min-width:100%}
+table{border-collapse:separate;border-spacing:0;direction:rtl}
+th,td{border-left:1px solid var(--grid);border-bottom:1px solid var(--grid);padding:0;position:relative}
+th{background:var(--head);font-weight:500;text-align:center}
+thead th{position:sticky;top:0;z-index:3}
+tbody th{position:sticky;right:0;z-index:2;min-width:104px;max-width:220px;text-align:right;border-right:1px solid var(--grid)}
+thead th:first-child{right:0;z-index:4;border-right:1px solid var(--grid)}
+thead th{border-top:1px solid var(--grid)}
+thead th:last-child,tbody td:last-child{border-left:1px solid var(--grid)}
+.lb{min-height:40px;min-width:58px;padding:9px 10px;outline:none;overflow-wrap:anywhere;white-space:pre-wrap;cursor:text}
+.lb:focus{background:var(--selbg);box-shadow:inset 0 0 0 2px var(--accent)}
+.lb:empty::before{content:attr(data-ph);color:var(--muted);opacity:.55;pointer-events:none}
+td.g{min-width:58px;height:42px;text-align:center;cursor:pointer;user-select:none;-webkit-user-select:none;color:var(--tk,var(--tick))}
+td.g:hover{background-image:linear-gradient(var(--selbg),var(--selbg))}
+td.g svg{width:22px;height:22px;display:block;margin:auto}
+td.g.pop path{stroke-dasharray:30;animation:draw .2s ease-out}
+@keyframes draw{from{stroke-dashoffset:30}to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){td.g.pop path{animation:none}.btn{transition:none}}
+table.selmode td.g,table.selmode th{cursor:cell}
+table.selmode{touch-action:none}
+table.selmode .lb{pointer-events:none;cursor:cell}
+.sel::after,.fp::after{content:"";position:absolute;inset:0;pointer-events:none;border:0 solid var(--accent)}
+.sel::after{background:var(--selbg)}
+.sT::after{border-top-width:2px}.sB::after{border-bottom-width:2px}.sL::after{border-left-width:2px}.sR::after{border-right-width:2px}
+.fp::after{border-width:1px;border-style:dashed;background:var(--selbg)}
+#handle{position:absolute;width:14px;height:14px;background:var(--accent);border:2px solid var(--surface);border-radius:3px;transform:translate(-50%,-50%);cursor:crosshair;z-index:6;touch-action:none}
+.addstrip{display:flex;gap:8px;padding:10px;position:sticky;right:0}
+.addstrip .btn{border-style:dashed}
+
+/* لوحة النمط */
+.pattern{position:fixed;inset-inline:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));margin-inline:auto;width:min(560px,calc(100% - 32px));
+  background:var(--surface);border:1px solid var(--accent);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px;z-index:50;display:flex;flex-direction:column;gap:10px}
+.pt-head{display:flex;align-items:center;gap:8px}
+.pt-head strong{font-size:16px}
+.pt-head span{color:var(--muted);font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.pt-x{border:0;background:transparent;font-size:22px;line-height:1;padding:2px 8px;border-radius:6px;color:var(--muted)}
+.pt-x:hover{color:var(--ink);background:var(--bg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:3px 12px;font-size:13px}
+.chip:hover,.chip.on{border-color:var(--accent);color:var(--accent)}
+.pt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.pt-grid{grid-template-columns:1fr}}
+.pt-prev{font-size:13px;color:var(--muted);background:var(--bg);border-radius:7px;padding:7px 10px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.pt-grid .field{margin:0}
+#toast{position:fixed;inset-inline:0;margin-inline:auto;width:fit-content;max-width:calc(100% - 32px);bottom:calc(80px + env(safe-area-inset-bottom,0px));
+  background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:99px;font-size:14px;z-index:80;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+</style>
+
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="6" fill="var(--accent)"/><path d="M8 16.5l5.2 5.2L24 10.8" fill="none" stroke="var(--accent-ink)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>جدول التشيك</span>
+    </div>
+    <div class="projbar" id="projbar" hidden>
+      <input id="projName" aria-label="اسم المشروع" maxlength="80">
+      <button class="btn" id="btnHome" type="button">المشاريع</button>
+      <button class="btn" id="btnNew" type="button">مشروع جديد</button>
+      <button class="btn" id="btnSave" type="button">حفظ</button>
+      <button class="btn" id="btnCopy" type="button">حفظ كنسخة</button>
+      <span class="state" id="saveState" role="status"></span>
+    </div>
+  </header>
+
+  <main id="home" class="home">
+    <section class="panel" aria-labelledby="newTitle">
+      <h2 id="newTitle">مشروع جديد: حدّد أبعاد الجدول</h2>
+      <form id="newForm" autocomplete="off">
+        <div class="field"><label for="nName">اسم المشروع</label><input id="nName" maxlength="80" value="مشروع جديد"></div>
+        <div class="dims">
+          <div class="field"><label for="nRows">عدد السطور</label><input id="nRows" type="number" min="1" max="200" value="8" inputmode="numeric"></div>
+          <div class="field"><label for="nCols">عدد الأعمدة</label><input id="nCols" type="number" min="1" max="60" value="7" inputmode="numeric"></div>
+        </div>
+        <p class="hintline">السطور من 1 إلى 200 والأعمدة من 1 إلى 60. يمكنك إضافة المزيد لاحقاً. عناوين السطور والأعمدة تبدأ فارغة لتكتب فيها ما تشاء.</p>
+        <div class="row-actions">
+          <button class="btn primary" type="submit">إنشاء الجدول</button>
+          <button class="btn" type="button" id="btnSample">نموذج أيام الأسبوع</button>
+        </div>
+        <p class="err" id="nErr" role="alert"></p>
+      </form>
+    </section>
+    <section class="panel" aria-labelledby="listTitle">
+      <h2 id="listTitle">مشاريعك المحفوظة</h2>
+      <ul class="plist" id="plist"></ul>
+      <details class="backup">
+        <summary>نسخ احتياطي واستيراد</summary>
+        <p class="hint" style="margin-top:8px">المشاريع تُحفظ داخل هذا المتصفح فقط. انسخ نسخة احتياطية إلى مكان آمن، أو ألصق نسخة سابقة هنا لاستيرادها.</p>
+        <div class="row-actions" style="margin-top:10px">
+          <button class="btn" type="button" id="btnExport">نسخ كل المشاريع</button>
+          <button class="btn" type="button" id="btnImport">استيراد من النص</button>
+        </div>
+        <textarea id="bkText" aria-label="نص النسخة الاحتياطية" placeholder="ألصق هنا نص النسخة الاحتياطية"></textarea>
+      </details>
+    </section>
+  </main>
+
+  <main id="editor" hidden>
+    <section class="tools" aria-label="الأدوات">
+      <div class="trow">
+        <div class="group">
+          <button class="btn" id="btnMode" type="button" aria-pressed="false">وضع التحديد</button>
+          <button class="btn" id="btnUndo" type="button">تراجع</button>
+        </div>
+        <span class="sep"></span>
+        <div class="group">
+          <span class="glabel">اللون</span>
+          <div class="sw" id="sw"></div>
+          <input type="color" id="colorPick" value="#3fbf7f" aria-label="لون مخصص">
+        </div>
+        <span class="sep"></span>
+        <div class="group">
+          <input class="num" id="addRowsN" type="number" min="1" max="100" value="1" aria-label="عدد السطور المضافة">
+          <button class="btn" id="btnAddRows" type="button">+ سطور</button>
+          <input class="num" id="addColsN" type="number" min="1" max="30" value="1" aria-label="عدد الأعمدة المضافة">
+          <button class="btn" id="btnAddCols" type="button">+ أعمدة</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="chkSuggest" checked> اقتراح نمط التلوين</label>
+      </div>
+      <p class="hint" id="modeHint"></p>
+      <div class="trow" id="selbar" hidden>
+        <span id="selInfo"></span>
+        <button class="btn" id="sbTick" type="button" data-for="g">وضع ✓</button>
+        <button class="btn" id="sbUntick" type="button" data-for="g">إزالة ✓</button>
+        <button class="btn" id="sbClearColor" type="button" data-for="gcr">مسح اللون</button>
+        <button class="btn" id="sbClear" type="button" data-for="gcr">مسح المحتوى</button>
+        <button class="btn" id="sbExpand" type="button" data-for="cr">تحديد خانات العناوين</button>
+        <button class="btn danger" id="sbDelete" type="button" data-for="cr">حذف المحدد</button>
+        <button class="btn" id="sbCancel" type="button" data-for="gcr">إلغاء التحديد</button>
+      </div>
+    </section>
+    <div class="sheet" id="sheet">
+      <div class="tblwrap" id="tblwrap"><table id="tbl" aria-label="جدول التشيك"></table><div id="handle" hidden title="اسحب للتعبئة التلقائية"></div></div>
+      <div class="addstrip"><button class="btn" id="stripRow" type="button">+ إضافة سطر</button><button class="btn" id="stripCol" type="button">+ إضافة عمود</button></div>
+    </div>
+  </main>
+
+  <div class="pattern" id="pattern" role="dialog" aria-label="نمط التلوين" hidden>
+    <div class="pt-head"><strong>نمط التلوين</strong><span id="ptCol"></span><button class="pt-x" id="ptClose" type="button" aria-label="إغلاق">×</button></div>
+    <div class="chips" id="ptChips"></div>
+    <div class="pt-grid">
+      <div class="field"><label for="ptGaps">الفواصل بين الخانات (مثال: 2 أو 2,5)</label><input id="ptGaps" value="2" inputmode="numeric"></div>
+      <div class="field"><label for="ptCount">عدد التكرارات (اتركه فارغاً للنهاية)</label><input id="ptCount" type="number" min="1" inputmode="numeric"></div>
+    </div>
+    <div class="pt-prev" id="ptPrev"></div>
+    <div class="group"><span class="glabel">لون الخانة</span><div class="sw" id="ptSw"></div>
+      <label class="chk"><input type="checkbox" id="ptTick" checked> وضع ✓</label></div>
+    <div class="row-actions"><button class="btn primary" id="ptApply" type="button">تطبيق على العمود</button><button class="btn" id="ptCancel" type="button">إغلاق</button></div>
+  </div>
+  <div id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var KEY='tickgrid.v1';
+var $=function(s){return document.querySelector(s);};
+var PALETTE=['','#3FBF7F','#F5C242','#F28C38','#E5534B','#E879A6','#9B6BE8','#4F8DF7','#35B8D1','#8B93A1','#2A2F3A'];
+var PNAMES=['بدون لون','أخضر','أصفر','برتقالي','أحمر','وردي','بنفسجي','أزرق','سماوي','رمادي','أسود'];
+var TICK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/* ---------- التخزين ---------- */
+var db={projects:{},settings:{suggest:true}};
+function load(){
+  try{var s=localStorage.getItem(KEY); if(s){var o=JSON.parse(s); if(o&&o.projects) db=o;}}catch(e){}
+  if(!db.projects) db.projects={}; if(!db.settings) db.settings={suggest:true};
+}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(db));return true;}catch(e){return false;}}
+function uid(){return Math.random().toString(36).slice(2,8)+Date.now().toString(36);}
+var mk=function(){return {on:0,color:'',a:0};};
+var mt=function(){return {t:'',c:''};};
+function newProject(name,rows,cols){
+  var p={id:uid(),name:name||'مشروع جديد',rows:rows,cols:cols,corner:'',colT:[],rowT:[],cells:[],updated:Date.now()};
+  for(var c=0;c<cols;c++)p.colT.push(mt());
+  for(var r=0;r<rows;r++){p.rowT.push(mt());var row=[];for(var k=0;k<cols;k++)row.push(mk());p.cells.push(row);}
+  return p;
+}
+
+/* ---------- حالة ---------- */
+var cur=null, sel=null, anchor=null, selMode=false, brush='', undoStack=[], saveT=null;
+var refs={g:[],c:[],r:[]}, paint=null, selDrag=null, fillDrag=null, patt=null, ptColor='#3FBF7F', delArm=null;
+var tbl=$('#tbl'), handle=$('#handle'), sheet=$('#sheet');
+
+function toast(msg){var t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove('show');},1800);}
+function timeStr(){try{return new Date().toLocaleTimeString('ar-u-nu-latn',{hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+function setState(t){$('#saveState').textContent=t;}
+function markDirty(){
+  cur.updated=Date.now(); setState('جارٍ الحفظ…'); clearTimeout(saveT); saveT=setTimeout(save,350);
+}
+function save(manual){
+  if(!cur)return; clearTimeout(saveT); db.projects[cur.id]=cur;
+  var ok=persist(); setState(ok?('محفوظ '+timeStr()):'تعذّر الحفظ في هذا المتصفح');
+  if(manual)toast(ok?'تم حفظ المشروع':'تعذّر الحفظ، انسخ نسخة احتياطية من شاشة المشاريع');
+}
+function snap(){
+  undoStack.push(JSON.stringify({corner:cur.corner,colT:cur.colT,rowT:cur.rowT,cells:cur.cells,rows:cur.rows,cols:cur.cols}));
+  if(undoStack.length>60)undoStack.shift();
+}
+function undo(){
+  if(!undoStack.length){toast('لا يوجد ما يمكن التراجع عنه');return;}
+  var s=JSON.parse(undoStack.pop()); cur.corner=s.corner;cur.colT=s.colT;cur.rowT=s.rowT;cur.cells=s.cells;cur.rows=s.rows;cur.cols=s.cols;
+  sel=null;anchor=null;closePattern();rebuild();markDirty();
+}
+
+/* ---------- السلاسل (التعبئة التلقائية) ---------- */
+var DAYS_AR=['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'];
+var DAYS_EN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var MONTHS_DZ=['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+var MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+var MONTHS_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var AR_IND='٠١٢٣٤٥٦٧٨٩';
+function toLatin(s){return s.replace(/[٠-٩]/g,function(d){return AR_IND.indexOf(d);}).replace(/[۰-۹]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d);});}
+function toInd(s){return s.replace(/\d/g,function(d){return AR_IND[d];});}
+function norm(s){return s.trim().toLowerCase().replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/ـ/g,'');}
+var LISTS=[DAYS_AR,DAYS_EN,MONTHS_DZ,MONTHS_AR,MONTHS_EN].map(function(l){return {items:l,keys:l.map(norm)};});
+function parseItem(t){
+  var s=(t||'').trim(); if(!s)return null;
+  var n=norm(s);
+  for(var i=0;i<LISTS.length;i++){var k=LISTS[i].keys.indexOf(n); if(k>=0)return {kind:'list',li:i,pos:k};}
+  var m=toLatin(s).match(/^(.*?)(\d+)([^\d]*)$/);
+  if(m)return {kind:'num',pre:m[1],n:parseInt(m[2],10),suf:m[3],len:m[2].length,pad:m[2].length>1&&m[2][0]==='0',ind:/[٠-٩]/.test(s)};
+  return null;
+}
+function fillSeries(src,count){
+  var items=src.map(parseItem), out=[], i;
+  var f=items[0], l=items[items.length-1];
+  var allNum=items.every(function(x){return x&&x.kind==='num'&&x.pre===f.pre&&x.suf===f.suf;});
+  var allList=items.every(function(x){return x&&x.kind==='list'&&x.li===f.li;});
+  if(allNum){
+    var step=items.length>1?(l.n-f.n)/(items.length-1):1;
+    for(i=1;i<=count;i++){
+      var v=Math.round((l.n+step*i)*1000)/1000, ds=String(Math.abs(v));
+      if(f.pad)ds=ds.replace(/^\d+/,function(x){return x.length<f.len?new Array(f.len-x.length+1).join('0')+x:x;});
+      if(v<0)ds='-'+ds; var txt=f.pre+ds+f.suf; if(f.ind)txt=toInd(txt); out.push(txt);
+    }
+    return out;
+  }
+  if(allList){
+    var L=LISTS[f.li].items, n=L.length, st=items.length>1?Math.round((l.pos-f.pos)/(items.length-1)):1;
+    if(st===0)st=1;
+    for(i=1;i<=count;i++)out.push(L[(((l.pos+st*i)%n)+n)%n]);
+    return out;
+  }
+  for(i=0;i<count;i++)out.push(src[i%src.length]);
+  return out;
+}
+function contrast(hex){
+  if(!hex)return '';
+  var n=parseInt(hex.slice(1),16),r=n>>16&255,g=n>>8&255,b=n&255;
+  return (0.299*r+0.587*g+0.114*b)>165?'#14301F':'#FFFFFF';
+}
+
+/* ---------- بناء الجدول ---------- */
+function labelEl(z,i,text,color){
+  var th=document.createElement('th'); th.dataset.z=z; th.scope=z==='c'?'col':'row';
+  if(z==='c')th.dataset.c=i; else if(z==='r')th.dataset.r=i;
+  var d=document.createElement('div'); d.className='lb'; d.textContent=text||'';
+  d.dataset.ph=z==='c'?'عمود':(z==='r'?'سطر':'العنوان');
+  d.contentEditable=selMode?'false':'true'; d.spellcheck=false;
+  th.appendChild(d); paintLabel(th,color);
+  return th;
+}
+function paintLabel(th,color){
+  th.style.background=color||''; th.style.color=color?contrast(color):'';
+}
+function paintCell(td,cell){
+  td.className='g'+(cell.on?' on':''); td.style.background=cell.color||'';
+  td.style.setProperty('--tk',cell.color?contrast(cell.color):'var(--tick)');
+  td.innerHTML=cell.on?TICK:'';
+}
+function rebuild(){
+  var st=sheet.scrollTop, sl=sheet.scrollLeft; tbl.innerHTML=''; tbl.className=selMode?'selmode':'';
+  refs={g:[],c:[],r:[]};
+  var thead=document.createElement('thead'), tr=document.createElement('tr');
+  var cor=labelEl('x',0,cur.corner); tr.appendChild(cor);
+  for(var c=0;c<cur.cols;c++){var th=labelEl('c',c,cur.colT[c].t,cur.colT[c].c); refs.c.push(th); tr.appendChild(th);}
+  thead.appendChild(tr); tbl.appendChild(thead);
+  var tb=document.createElement('tbody');
+  for(var r=0;r<cur.rows;r++){
+    var row=document.createElement('tr'), rh=labelEl('r',r,cur.rowT[r].t,cur.rowT[r].c); refs.r.push(rh); row.appendChild(rh);
+    var arr=[];
+    for(var k=0;k<cur.cols;k++){
+      var td=document.createElement('td'); td.dataset.z='g'; td.dataset.r=r; td.dataset.c=k; paintCell(td,cur.cells[r][k]); arr.push(td); row.appendChild(td);
+    }
+    refs.g.push(arr); tb.appendChild(row);
+  }
+  tbl.appendChild(tb);
+  if(sel&&(sel.r2>=cur.rows||sel.c2>=cur.cols))sel=null;
+  paintSel(); placeHandle(); updateSelBar(); updateHint();
+  sheet.scrollTop=st; sheet.scrollLeft=sl;
+}
+function elOf(z,r,c){return z==='g'?refs.g[r]&&refs.g[r][c]:(z==='c'?refs.c[c]:refs.r[r]);}
+
+/* ---------- التحديد ---------- */
+function eachSel(s,fn){
+  if(!s)return;
+  for(var r=s.r1;r<=s.r2;r++)for(var c=s.c1;c<=s.c2;c++)fn(elOf(s.z,r,c),r,c);
+}
+function clearSelPaint(){eachSel(sel,function(e){if(e)e.classList.remove('sel','sT','sB','sL','sR');});}
+function paintSel(){
+  eachSel(sel,function(e,r,c){
+    if(!e)return; e.classList.add('sel');
+    if(r===sel.r1)e.classList.add('sT'); if(r===sel.r2)e.classList.add('sB');
+    if(c===sel.c2)e.classList.add('sL'); if(c===sel.c1)e.classList.add('sR');
+  });
+}
+function mkSel(z,a,b){return {z:z,r1:Math.min(a.r,b.r),r2:Math.max(a.r,b.r),c1:Math.min(a.c,b.c),c2:Math.max(a.c,b.c)};}
+function setSel(s){
+  clearSelPaint(); sel=s; if(!s)anchor=null; paintSel(); placeHandle(); updateSelBar(); disarmDelete();
+}
+function placeHandle(){
+  if(!selMode||!sel){handle.hidden=true;return;}
+  var t=elOf(sel.z,sel.r2,sel.c2); if(!t){handle.hidden=true;return;}
+  handle.hidden=false; handle.style.left=t.offsetLeft+'px'; handle.style.top=(t.offsetTop+t.offsetHeight)+'px';
+}
+function updateSelBar(){
+  var bar=$('#selbar'); if(!sel){bar.hidden=true;return;}
+  bar.hidden=false;
+  var nr=sel.r2-sel.r1+1, nc=sel.c2-sel.c1+1;
+  $('#selInfo').textContent=sel.z==='g'?(nr+' × '+nc+' خانة محددة'):(sel.z==='c'?(nc+' عمود محدد'):(nr+' سطر محدد'));
+  Array.prototype.forEach.call(bar.querySelectorAll('button[data-for]'),function(b){b.hidden=b.dataset.for.indexOf(sel.z)<0;});
+}
+function updateHint(){
+  $('#modeHint').textContent=selMode
+    ?'اسحب لتحديد خانات أو عناوين، ثم اختر لوناً أو اسحب المربع الصغير في الزاوية للتعبئة التلقائية (أرقام، أيام، أشهر).'
+    :'اضغط على خانة لوضع علامة ✓، أو اسحب لتعبئة عدة خانات. العناوين قابلة للكتابة مباشرة.';
+}
+function setMode(on){
+  selMode=on; var b=$('#btnMode'); b.setAttribute('aria-pressed',on?'true':'false'); b.textContent=on?'خروج من التحديد':'وضع التحديد';
+  if(!on)setSel(null); closePattern(); rebuild();
+}
+
+/* ---------- تعديل الخانات ---------- */
+function setOn(r,c,val,pop){
+  var cell=cur.cells[r][c], td=refs.g[r][c];
+  cell.on=val?1:0;
+  if(val){ if(brush&&!(cell.color&&!cell.a)){cell.color=brush;cell.a=1;} }
+  else if(cell.a){cell.color='';cell.a=0;}
+  paintCell(td,cell);
+  if(val&&pop){td.classList.add('pop');setTimeout(function(){td.classList.remove('pop');},300);}
+  if(sel&&sel.z==='g'&&r>=sel.r1&&r<=sel.r2&&c>=sel.c1&&c<=sel.c2){clearSelPaint();paintSel();}
+}
+function selApply(fn){
+  if(!sel)return; snap();
+  if(sel.z==='g'){eachSel(sel,function(e,r,c){fn(cur.cells[r][c]);paintCell(e,cur.cells[r][c]);});clearSelPaint();paintSel();}
+  markDirty();
+}
+function colorSel(color){
+  if(!sel)return; snap();
+  if(sel.z==='g'){eachSel(sel,function(e,r,c){var x=cur.cells[r][c];x.color=color;x.a=0;paintCell(e,x);});}
+  else if(sel.z==='c'){for(var c=sel.c1;c<=sel.c2;c++){cur.colT[c].c=color;paintLabel(refs.c[c],color);}}
+  else if(sel.z==='r'){for(var r=sel.r1;r<=sel.r2;r++){cur.rowT[r].c=color;paintLabel(refs.r[r],color);}}
+  clearSelPaint();paintSel();markDirty();
+}
+function clearSel(){
+  if(!sel)return; snap();
+  if(sel.z==='g'){eachSel(sel,function(e,r,c){cur.cells[r][c]=mk();});}
+  else if(sel.z==='c'){for(var c=sel.c1;c<=sel.c2;c++)cur.colT[c]=mt();}
+  else if(sel.z==='r'){for(var r=sel.r1;r<=sel.r2;r++)cur.rowT[r]=mt();}
+  rebuild();markDirty();
+}
+function disarmDelete(){var b=$('#sbDelete');b.classList.remove('armed');b.textContent='حذف المحدد';clearTimeout(delArm);}
+function deleteSel(){
+  if(!sel||sel.z==='g')return; var b=$('#sbDelete');
+  if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='تأكيد الحذف؟';delArm=setTimeout(disarmDelete,3000);return;}
+  var n=(sel.z==='c'?sel.c2-sel.c1:sel.r2-sel.r1)+1;
+  if(n>=(sel.z==='c'?cur.cols:cur.rows)){toast('لا يمكن حذف كل '+(sel.z==='c'?'الأعمدة':'السطور'));disarmDelete();return;}
+  snap();
+  if(sel.z==='c'){cur.colT.splice(sel.c1,n);cur.cells.forEach(function(row){row.splice(sel.c1,n);});cur.cols-=n;}
+  else{cur.rowT.splice(sel.r1,n);cur.cells.splice(sel.r1,n);cur.rows-=n;}
+  sel=null;anchor=null;disarmDelete();rebuild();markDirty();toast('تم الحذف');
+}
+function expandSel(){
+  if(!sel||sel.z==='g')return;
+  if(sel.z==='c')setSel({z:'g',r1:0,r2:cur.rows-1,c1:sel.c1,c2:sel.c2});
+  else setSel({z:'g',r1:sel.r1,r2:sel.r2,c1:0,c2:cur.cols-1});
+}
+function addRows(n){
+  n=Math.max(1,Math.min(100,n|0)); if(cur.rows+n>500){toast('الحد الأقصى 500 سطر');return;}
+  snap(); for(var i=0;i<n;i++){cur.rowT.push(mt());var row=[];for(var c=0;c<cur.cols;c++)row.push(mk());cur.cells.push(row);cur.rows++;}
+  rebuild();markDirty();sheet.scrollTop=sheet.scrollHeight;toast('أضيف '+n+' سطر');
+}
+function addCols(n){
+  n=Math.max(1,Math.min(30,n|0)); if(cur.cols+n>100){toast('الحد الأقصى 100 عمود');return;}
+  snap(); for(var i=0;i<n;i++){cur.colT.push(mt());cur.cells.forEach(function(row){row.push(mk());});cur.cols++;}
+  rebuild();markDirty();sheet.scrollLeft=-sheet.scrollWidth;toast('أضيف '+n+' عمود');
+}
+
+/* ---------- التعبئة التلقائية (مقبض الزاوية) ---------- */
+function fillTarget(s,cell){
+  if(!cell)return null; var z=cell.dataset.z, r=+(cell.dataset.r||0), c=+(cell.dataset.c||0);
+  if(s.z==='c'){var tc=(z==='c'||z==='g')?c:null; return tc!==null&&tc>s.c2?{axis:'h',to:tc}:null;}
+  if(s.z==='r'){var tr=(z==='r'||z==='g')?r:null; return tr!==null&&tr>s.r2?{axis:'v',to:tr}:null;}
+  if(z==='g'){
+    var dr=r-s.r2, dc=c-s.c2;
+    if(dr>0&&dr>=dc)return {axis:'v',to:r};
+    if(dc>0)return {axis:'h',to:c};
+  } else if(z==='r'&&r>s.r2)return {axis:'v',to:r};
+  return null;
+}
+function fillRange(s,t){
+  return t.axis==='v'?{z:s.z,r1:s.r2+1,r2:t.to,c1:s.c1,c2:s.c2}:{z:s.z,r1:s.r1,r2:s.r2,c1:s.c2+1,c2:t.to};
+}
+function clearPreview(){Array.prototype.forEach.call(tbl.querySelectorAll('.fp'),function(e){e.classList.remove('fp');});}
+function showPreview(s,t){clearPreview(); if(!t)return; eachSel(fillRange(s,t),function(e){if(e)e.classList.add('fp');});}
+function applyFill(s,t){
+  var rg=fillRange(s,t), i, n;
+  snap();
+  if(s.z==='c'){
+    var src=[];for(i=s.c1;i<=s.c2;i++)src.push(cur.colT[i].t);
+    n=t.to-s.c2; var o=fillSeries(src,n); for(i=0;i<n;i++)cur.colT[s.c2+1+i].t=o[i];
+  } else if(s.z==='r'){
+    var src2=[];for(i=s.r1;i<=s.r2;i++)src2.push(cur.rowT[i].t);
+    n=t.to-s.r2; var o2=fillSeries(src2,n); for(i=0;i<n;i++)cur.rowT[s.r2+1+i].t=o2[i];
+  } else if(t.axis==='v'){
+    var h=s.r2-s.r1+1;
+    for(var r=rg.r1;r<=rg.r2;r++)for(var c=s.c1;c<=s.c2;c++){var sc=cur.cells[s.r1+((r-rg.r1)%h)][c];cur.cells[r][c]={on:sc.on,color:sc.color,a:sc.a};}
+  } else {
+    var w=s.c2-s.c1+1;
+    for(var r2=s.r1;r2<=s.r2;r2++)for(var c2=rg.c1;c2<=rg.c2;c2++){var sc2=cur.cells[r2][s.c1+((c2-rg.c1)%w)];cur.cells[r2][c2]={on:sc2.on,color:sc2.color,a:sc2.a};}
+  }
+  var ns={z:s.z,r1:s.r1,c1:s.c1,r2:Math.max(s.r2,rg.r2),c2:Math.max(s.c2,rg.c2)};
+  sel=null; rebuild(); setSel(ns); markDirty();
+}
+handle.addEventListener('pointerdown',function(e){
+  if(!sel)return; e.preventDefault(); e.stopPropagation();
+  fillDrag={s:sel,t:null}; handle.setPointerCapture(e.pointerId);
+});
+handle.addEventListener('pointermove',function(e){
+  if(!fillDrag)return;
+  var x=document.elementFromPoint(e.clientX,e.clientY), cell=x&&x.closest?x.closest('[data-z]'):null;
+  fillDrag.t=fillTarget(fillDrag.s,cell); showPreview(fillDrag.s,fillDrag.t);
+});
+function endFill(apply){
+  if(!fillDrag)return; var f=fillDrag; fillDrag=null; clearPreview();
+  if(apply&&f.t)applyFill(f.s,f.t);
+}
+handle.addEventListener('pointerup',function(){endFill(true);});
+handle.addEventListener('pointercancel',function(){endFill(false);});
+
+/* ---------- أحداث الجدول ---------- */
+function cellAt(x,y){var e=document.elementFromPoint(x,y);return e&&e.closest?e.closest('[data-z]'):null;}
+function blurActive(){var a=document.activeElement;if(a&&a.blur&&a!==document.body)a.blur();}
+tbl.addEventListener('pointerdown',function(e){
+  var cell=e.target.closest('[data-z]'); if(!cell)return;
+  var z=cell.dataset.z;
+  if(selMode){
+    if(z==='x'){setSel({z:'g',r1:0,r2:cur.rows-1,c1:0,c2:cur.cols-1});return;}
+    e.preventDefault(); blurActive();
+    var r=+(cell.dataset.r||0), c=+(cell.dataset.c||0), a={r:r,c:c};
+    if(e.shiftKey&&sel&&sel.z===z&&anchor)a=anchor;
+    anchor=a; selDrag={z:z}; tbl.setPointerCapture(e.pointerId); setSel(mkSel(z,a,{r:r,c:c}));
+    return;
+  }
+  if(z!=='g')return;
+  e.preventDefault(); blurActive();
+  var rr=+cell.dataset.r, cc=+cell.dataset.c, val=!cur.cells[rr][cc].on;
+  snap(); paint={val:val,done:{},count:0,last:null};
+  tbl.setPointerCapture(e.pointerId); paintAt(rr,cc);
+});
+function paintAt(r,c){
+  var k=r+'_'+c; if(paint.done[k])return; paint.done[k]=1;
+  if(!!cur.cells[r][c].on===paint.val)return;
+  setOn(r,c,paint.val,true); paint.count++; paint.last={r:r,c:c};
+}
+tbl.addEventListener('pointermove',function(e){
+  if(!selDrag&&!paint)return;
+  var cell=cellAt(e.clientX,e.clientY); if(!cell)return;
+  if(selDrag){
+    if(cell.dataset.z!==selDrag.z)return;
+    var r=+(cell.dataset.r||0), c=+(cell.dataset.c||0), n=mkSel(selDrag.z,anchor,{r:r,c:c});
+    if(sel&&n.r1===sel.r1&&n.r2===sel.r2&&n.c1===sel.c1&&n.c2===sel.c2)return;
+    setSel(n);
+  } else if(paint&&cell.dataset.z==='g'){paintAt(+cell.dataset.r,+cell.dataset.c);}
+});
+function endPointer(){
+  selDrag=null;
+  if(!paint)return; var p=paint; paint=null;
+  if(p.count===0){undoStack.pop();return;}
+  markDirty();
+  if(p.count===1&&p.val&&db.settings.suggest)openPattern(p.last.r,p.last.c); else closePattern();
+}
+tbl.addEventListener('pointerup',endPointer);
+tbl.addEventListener('pointercancel',function(){selDrag=null;if(paint){paint=null;}});
+tbl.addEventListener('input',function(e){
+  var th=e.target.closest('[data-z]'); if(!th)return; var z=th.dataset.z, t=e.target.textContent;
+  if(z==='c')cur.colT[+th.dataset.c].t=t; else if(z==='r')cur.rowT[+th.dataset.r].t=t; else cur.corner=t;
+  if(z==='c'&&patt)$('#ptCol').textContent=colName(patt.c);
+  markDirty();
+});
+tbl.addEventListener('keydown',function(e){
+  var th=e.target.closest('[data-z]'); if(!th||!e.target.classList.contains('lb'))return;
+  if(e.key==='Enter'){
+    e.preventDefault(); var z=th.dataset.z, nx=null;
+    if(z==='r')nx=refs.r[+th.dataset.r+1]; else if(z==='c')nx=refs.c[+th.dataset.c+1];
+    if(nx)nx.firstChild.focus(); else e.target.blur();
+  }
+});
+tbl.addEventListener('paste',function(e){
+  var th=e.target.closest('[data-z]'); if(!th||!e.target.classList.contains('lb'))return;
+  e.preventDefault();
+  var txt=(e.clipboardData||window.clipboardData).getData('text'), z=th.dataset.z;
+  var parts=txt.split(/\r?\n|\t/).filter(function(x,i,a){return x!==''||i<a.length-1;});
+  if(parts.length>1&&(z==='r'||z==='c')){
+    snap(); var i0=+(z==='r'?th.dataset.r:th.dataset.c), arr=z==='r'?cur.rowT:cur.colT;
+    parts.forEach(function(p,i){if(arr[i0+i])arr[i0+i].t=p.trim();});
+    rebuild(); markDirty(); return;
+  }
+  document.execCommand('insertText',false,parts.length?parts[0].replace(/\s+/g,' '):'');
+});
+sheet.addEventListener('scroll',placeHandle);
+window.addEventListener('resize',placeHandle);
+
+/* ---------- لوحة النمط ---------- */
+function colName(c){var t=cur.colT[c].t.trim();return t?('«'+t+'»'):('العمود '+(c+1));}
+function parseGaps(s){
+  var m=toLatin(s).match(/\d+/g); if(!m)return null;
+  var g=m.map(Number); return g.every(function(x){return x>=1&&x<=500;})?g:null;
+}
+function gapRows(r,g,count){
+  var out=[],i=r,k=0;
+  while(true){i+=g[k%g.length];k++; if(i>=cur.rows)break; if(count&&k>count)break; out.push(i);}
+  return out;
+}
+function openPattern(r,c){
+  patt={r:r,c:c}; $('#ptCol').textContent=colName(c)+' · من السطر '+(r+1); $('#pattern').hidden=false; updatePrev();
+}
+function closePattern(){patt=null;$('#pattern').hidden=true;}
+function updatePrev(){
+  if(!patt)return; var g=parseGaps($('#ptGaps').value), cnt=parseInt($('#ptCount').value,10)||0, p=$('#ptPrev');
+  Array.prototype.forEach.call($('#ptChips').children,function(ch){ch.classList.toggle('on',g&&ch.dataset.v===g.join(','));});
+  if(!g){p.textContent='اكتب رقماً أو أكثر مفصولة بفاصلة، مثل 2 أو 2,5.';return;}
+  var rows=gapRows(patt.r,g,cnt), lim=rows.slice(0,8).map(function(x){return x+1;});
+  p.textContent=rows.length?('السطور التي ستتلوّن بعد السطر '+(patt.r+1)+': '+lim.join('، ')+(rows.length>8?' … ('+rows.length+' خانة)':'')):'لا توجد خانات بعد هذه الخانة بهذا الفاصل.';
+}
+function applyPattern(){
+  if(!patt)return; var g=parseGaps($('#ptGaps').value);
+  if(!g){toast('اكتب فاصلاً صحيحاً مثل 2 أو 2,5');return;}
+  var cnt=parseInt($('#ptCount').value,10)||0, rows=gapRows(patt.r,g,cnt), tick=$('#ptTick').checked, c=patt.c;
+  snap(); var all=[patt.r].concat(rows);
+  all.forEach(function(r){
+    var cell=cur.cells[r][c]; if(tick)cell.on=1; cell.color=ptColor; cell.a=ptColor?1:0; paintCell(refs.g[r][c],cell);
+  });
+  markDirty(); closePattern(); toast('تم تلوين '+all.length+' خانة');
+}
+function makeSwatches(box,get,pick){
+  box.innerHTML='';
+  PALETTE.forEach(function(col,i){
+    var b=document.createElement('button'); b.type='button'; b.className='swb'+(col?'':' none'); b.title=PNAMES[i]; b.setAttribute('aria-label',PNAMES[i]);
+    if(col)b.style.background=col; b.dataset.v=col; b.setAttribute('aria-pressed',get().toLowerCase()===col.toLowerCase()?'true':'false');
+    b.addEventListener('click',function(){pick(col);}); box.appendChild(b);
+  });
+}
+function refreshSw(){
+  makeSwatches($('#sw'),function(){return brush;},function(c){brush=c;if(c)$('#colorPick').value=c;refreshSw();if(sel)colorSel(c);});
+  makeSwatches($('#ptSw'),function(){return ptColor;},function(c){ptColor=c;refreshSw();});
+}
+[['كل خانة','1'],['كل خانتين','2'],['كل 3','3'],['كل 4','4'],['2 ثم 5','2,5'],['3 ثم 1','3,1']].forEach(function(x){
+  var b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=x[0]; b.dataset.v=x[1];
+  b.addEventListener('click',function(){$('#ptGaps').value=x[1];updatePrev();}); $('#ptChips').appendChild(b);
+});
+$('#ptGaps').addEventListener('input',updatePrev); $('#ptCount').addEventListener('input',updatePrev);
+$('#ptApply').addEventListener('click',applyPattern); $('#ptClose').addEventListener('click',closePattern); $('#ptCancel').addEventListener('click',closePattern);
+
+/* ---------- الشاشات والمشاريع ---------- */
+function showHome(){
+  if(cur)save(); cur=null; sel=null; closePattern(); handle.hidden=true;
+  $('#editor').hidden=true; $('#home').hidden=false; $('#projbar').hidden=true; renderList();
+}
+function openProject(p){
+  cur=p; undoStack=[]; sel=null; anchor=null; selMode=false; $('#btnMode').setAttribute('aria-pressed','false'); $('#btnMode').textContent='وضع التحديد';
+  $('#home').hidden=true; $('#editor').hidden=false; $('#projbar').hidden=false; $('#projName').value=p.name;
+  $('#chkSuggest').checked=!!db.settings.suggest; setState('محفوظ'); closePattern(); rebuild();
+  sheet.scrollTop=0;
+}
+function stats(p){var on=0;p.cells.forEach(function(r){r.forEach(function(c){if(c.on)on++;});});return {on:on,total:p.rows*p.cols};}
+function renderList(){
+  var ul=$('#plist'); ul.innerHTML='';
+  var ps=Object.keys(db.projects).map(function(k){return db.projects[k];}).sort(function(a,b){return b.updated-a.updated;});
+  if(!ps.length){var li=document.createElement('li');li.className='empty';li.textContent='لا توجد مشاريع بعد. أنشئ أول جدول من النموذج.';ul.appendChild(li);return;}
+  ps.forEach(function(p){
+    var s=stats(p), li=document.createElement('li'); li.className='pitem';
+    var h=document.createElement('h3'); h.textContent=p.name||'بدون اسم';
+    var acts=document.createElement('div'); acts.className='row-actions';
+    var o=document.createElement('button'); o.className='btn primary'; o.type='button'; o.textContent='فتح'; o.addEventListener('click',function(){openProject(p);});
+    var d=document.createElement('button'); d.className='btn danger'; d.type='button'; d.textContent='حذف';
+    var t=null; d.addEventListener('click',function(){
+      if(!d.classList.contains('armed')){d.classList.add('armed');d.textContent='تأكيد الحذف؟';t=setTimeout(function(){d.classList.remove('armed');d.textContent='حذف';},3000);return;}
+      clearTimeout(t); delete db.projects[p.id]; persist(); renderList(); toast('تم حذف المشروع');
+    });
+    acts.appendChild(o); acts.appendChild(d);
+    var m=document.createElement('div'); m.className='pmeta';
+    m.textContent=p.rows+' سطر × '+p.cols+' عمود · '+s.on+' من '+s.total+' محددة';
+    var bar=document.createElement('div'); bar.className='bar'; var i=document.createElement('i'); i.style.width=(s.total?Math.round(s.on/s.total*100):0)+'%'; bar.appendChild(i);
+    var left=document.createElement('div'); left.style.minWidth='0'; left.appendChild(h); left.appendChild(m);
+    li.appendChild(left); li.appendChild(acts); li.appendChild(bar); ul.appendChild(li);
+  });
+}
+function createFromForm(sample){
+  var name=$('#nName').value.trim()||'مشروع جديد', rows=parseInt($('#nRows').value,10), cols=parseInt($('#nCols').value,10), err=$('#nErr');
+  if(sample){rows=6;cols=7;name=$('#nName').value.trim()||'جدول الأسبوع';}
+  if(!(rows>=1&&rows<=200)||!(cols>=1&&cols<=60)){err.textContent='السطور بين 1 و200 والأعمدة بين 1 و60.';return;}
+  err.textContent='';
+  var p=newProject(name,rows,cols);
+  if(sample){
+    for(var c=0;c<cols;c++)p.colT[c].t=DAYS_AR[c];
+    var rt=fillSeries(['مهمة 1'],rows-1); p.rowT[0].t='مهمة 1'; for(var r=1;r<rows;r++)p.rowT[r].t=rt[r-1];
+  }
+  db.projects[p.id]=p; persist(); openProject(p);
+}
+$('#newForm').addEventListener('submit',function(e){e.preventDefault();createFromForm(false);});
+$('#btnSample').addEventListener('click',function(){createFromForm(true);});
+$('#btnHome').addEventListener('click',showHome);
+$('#btnNew').addEventListener('click',function(){showHome();$('#nName').focus();$('#nName').select();});
+$('#btnSave').addEventListener('click',function(){save(true);});
+$('#btnCopy').addEventListener('click',function(){
+  save(); var p=JSON.parse(JSON.stringify(cur)); p.id=uid(); p.name=(cur.name||'مشروع')+' (نسخة)'; p.updated=Date.now();
+  db.projects[p.id]=p; persist(); openProject(p); toast('تم إنشاء نسخة وفتحها');
+});
+$('#projName').addEventListener('input',function(e){cur.name=e.target.value;markDirty();});
+$('#btnUndo').addEventListener('click',undo);
+$('#btnMode').addEventListener('click',function(){setMode(!selMode);});
+$('#btnAddRows').addEventListener('click',function(){addRows(parseInt($('#addRowsN').value,10)||1);});
+$('#btnAddCols').addEventListener('click',function(){addCols(parseInt($('#addColsN').value,10)||1);});
+$('#stripRow').addEventListener('click',function(){addRows(1);});
+$('#stripCol').addEventListener('click',function(){addCols(1);});
+$('#chkSuggest').addEventListener('change',function(e){db.settings.suggest=e.target.checked;persist();if(!e.target.checked)closePattern();});
+$('#colorPick').addEventListener('input',function(e){brush=e.target.value;refreshSw();if(sel)colorSel(brush);});
+$('#sbTick').addEventListener('click',function(){selApply(function(c){c.on=1;if(brush&&!(c.color&&!c.a)){c.color=brush;c.a=1;}});});
+$('#sbUntick').addEventListener('click',function(){selApply(function(c){c.on=0;if(c.a){c.color='';c.a=0;}});});
+$('#sbClearColor').addEventListener('click',function(){colorSel('');});
+$('#sbClear').addEventListener('click',clearSel);
+$('#sbExpand').addEventListener('click',expandSel);
+$('#sbDelete').addEventListener('click',deleteSel);
+$('#sbCancel').addEventListener('click',function(){setSel(null);});
+
+/* نسخ احتياطي */
+function validProject(p){
+  if(!p||typeof p!=='object'||!Array.isArray(p.cells)||!Array.isArray(p.colT)||!Array.isArray(p.rowT))return null;
+  var hex=function(c){return typeof c==='string'&&/^#[0-9a-fA-F]{6}$/.test(c)?c:'';};
+  var rows=p.cells.length, cols=rows?p.cells[0].length:0; if(!rows||!cols||rows>500||cols>100)return null;
+  var q={id:uid(),name:String(p.name||'مشروع مستورد').slice(0,80),rows:rows,cols:cols,corner:String(p.corner||'').slice(0,200),colT:[],rowT:[],cells:[],updated:Date.now()};
+  for(var c=0;c<cols;c++){var t=p.colT[c]||{};q.colT.push({t:String(t.t||'').slice(0,200),c:hex(t.c)});}
+  for(var r=0;r<rows;r++){
+    var t2=p.rowT[r]||{};q.rowT.push({t:String(t2.t||'').slice(0,200),c:hex(t2.c)});
+    var row=[];for(var k=0;k<cols;k++){var x=(p.cells[r]&&p.cells[r][k])||{};row.push({on:x.on?1:0,color:hex(x.color),a:x.a?1:0});}
+    q.cells.push(row);
+  }
+  return q;
+}
+$('#btnExport').addEventListener('click',function(){
+  var txt=JSON.stringify(db.projects), ta=$('#bkText'); ta.value=txt;
+  var done=function(){toast('تم نسخ كل المشاريع');}, fail=function(){ta.select();toast('حدّد النص أعلاه وانسخه يدوياً');};
+  try{navigator.clipboard.writeText(txt).then(done,fail);}catch(e){fail();}
+});
+$('#btnImport').addEventListener('click',function(){
+  var n=0;
+  try{
+    var o=JSON.parse($('#bkText').value), list=Array.isArray(o)?o:Object.keys(o).map(function(k){return o[k];});
+    list.forEach(function(p){var q=validProject(p);if(q){db.projects[q.id]=q;n++;}});
+  }catch(e){}
+  if(n){persist();renderList();toast('تم استيراد '+n+' مشروع');$('#bkText').value='';}else toast('لم يتم التعرف على النص');
+});
+
+/* لوحة المفاتيح */
+document.addEventListener('keydown',function(e){
+  if(!cur)return; var ed=e.target&&(e.target.isContentEditable||/^(INPUT|TEXTAREA)$/.test(e.target.tagName));
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!ed){e.preventDefault();undo();return;}
+  if(e.key==='Escape'){if(patt)closePattern();else if(sel)setSel(null);return;}
+  if((e.key==='Delete'||e.key==='Backspace')&&sel&&!ed){e.preventDefault();clearSel();}
+});
+window.addEventListener('pagehide',function(){if(cur)save();});
+
+load(); refreshSw(); updateHint(); renderList();
+})();
+</script>
+
+</body></html>
